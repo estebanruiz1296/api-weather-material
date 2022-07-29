@@ -31,14 +31,18 @@ function App() {
   return (
     <div className="App">
       <NavBar/>
+      <Container maxWidth='xl'sx={{mt:9}}>
       <TableContainer component={Paper}>
           <Table sx={{ minWidth: 700 }} aria-label="customized table" >
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Lanzamiento</TableCell>
-                <TableCell>Desarrollador</TableCell>
+                <TableCell>Longitud</TableCell>
+                <TableCell>Latitud</TableCell>
+                <TableCell>Clima</TableCell>
+                <TableCell>Descripción</TableCell>
+                <TableCell>Temperatura</TableCell>
+                <TableCell>Pais</TableCell>
+                <TableCell>Ciudad</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -55,6 +59,7 @@ function App() {
             </TableFooter>
           </Table>
         </TableContainer>
+        </Container>
     </div>
   );
 }
