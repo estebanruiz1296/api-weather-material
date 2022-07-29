@@ -1,24 +1,38 @@
-import React, { useEffect} from 'react';
-import { apiWeatherWeb } from './api/ApiWeather';
+import React, { useEffect, useState} from 'react';
+import { apiWeatherLocal} from './api/ApiWeather';
 import { NavBar } from './common/NavBar';
 import {TableContainer, Table, TableHead, TableRow, 
   Paper, TableCell, TableBody, TableFooter,
-  Container} from '@mui/material'
-
-enum apiData {
-  API_KEY = "bafb1aba085a22b07648ba4d0ccad279",
-  LANG = "es",
-  CITY_CARACTER_CONTROL = "&q=",
-}
+  Container, TextField, Button} from '@mui/material'
+import { WeatherInterfaz } from './interfaces/WeatherInterface';
 
 function App() {
 
-  //petición get api weathermap
+  //estado - hook
+  const [descripcionClima, setdescripcionClima] = useState<WeatherInterfaz>({
+    id : 0,
+    ciudad : '',
+    clima : '',
+    descripcion : '',
+    temperatura : 0,
+    pais : ''
+  });
+  //acciones
+  //datos capturados textFields
+  const handleChange = ({target} : React.ChangeEvent<HTMLInputElement>) => {
+    const {name, value} = target;
+    setdescripcionClima(prevState => ({
+      ...prevState,
+      [name] :value
+    }));
+    console.log(descripcionClima);
+  }
+
+  //petición get api weather local
   const getWeather = async () => {
-    await apiWeatherWeb.get('weather?appid=' + 
-      apiData.API_KEY + "&lang="+apiData.LANG + apiData.CITY_CARACTER_CONTROL + "pasto")
+    await apiWeatherLocal.get('/descripcion/' + descripcionClima.ciudad)
       .then(response => {
-        console.log(response.data)
+        setdescripcionClima(response.data)
       }).catch(error => {
         console.log(error)
       });
@@ -31,18 +45,23 @@ function App() {
   return (
     <div className="App">
       <NavBar/>
-      <Container maxWidth='xl'sx={{mt:9}}>
+      <Container maxWidth='xl' sx={{mt:9}}>
+        <Container sx={{display:'flex', justifyContent:'center', alignItems:'center'}}>
+          
+          <TextField  sx={{mt:1.5, mb:2, mx:2}} margin="normal" 
+            onChange={handleChange}/>
+          <Button variant='outlined'>Buscar</Button>
+        
+        </Container>
       <TableContainer component={Paper}>
           <Table sx={{ minWidth: 700 }} aria-label="customized table" >
             <TableHead>
               <TableRow>
-                <TableCell>Longitud</TableCell>
-                <TableCell>Latitud</TableCell>
-                <TableCell>Clima</TableCell>
-                <TableCell>Descripción</TableCell>
-                <TableCell>Temperatura</TableCell>
-                <TableCell>Pais</TableCell>
                 <TableCell>Ciudad</TableCell>
+                <TableCell>Clima</TableCell>
+                <TableCell>Descripcion</TableCell>
+                <TableCell>Temperatura</TableCell>
+                <TableCell>País</TableCell>
                 <TableCell>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -50,9 +69,13 @@ function App() {
               
             </TableBody>
             <TableFooter>
-              <TableRow >
+              <TableRow key={descripcionClima.id}>
+                <TableCell>{descripcionClima.ciudad}</TableCell>
+                <TableCell>{descripcionClima.clima}</TableCell>
+                <TableCell>{descripcionClima.descripcion}</TableCell>
+                <TableCell>{descripcionClima.temperatura}</TableCell>
+                <TableCell>{descripcionClima.pais}</TableCell>
                 <Container sx={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                 
                   
                 </Container>
               </TableRow>
