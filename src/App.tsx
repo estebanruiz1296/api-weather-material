@@ -55,7 +55,7 @@ function App() {
         console.log(response.status);
         handleCloseInsertar();
       }).catch(error => {
-        console.log(error);
+        console.log(error.response.data);
       })
   }
 
