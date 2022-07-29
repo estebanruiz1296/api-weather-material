@@ -35,13 +35,27 @@ function App() {
   //Estados para el modal insertar
   const [isActiveModalInsertar, setIsActiveModalInsertar] = useState(false);
 
+  //Estados para el modal Editar
+  const [isActiveModalEditar, setIsActiveModalEditar] = useState(false);
+
+  //Estados para el modal Mostrar
+  const [isActiveModalMostrar, setIsActiveModalMostrar] = useState(false);
+
   //acciones modal insertar
   const handleCloseInsertar : React.MouseEventHandler<HTMLButtonElement> | any = () => setIsActiveModalInsertar(false);
   const handleShowInsertar = () => setIsActiveModalInsertar(true);
+  
+  //acciones modal editar
+  const handleCloseEditar : React.MouseEventHandler<HTMLButtonElement> | any = () => setIsActiveModalEditar(false);
+  const handleShowEditar = () => setIsActiveModalEditar(true);
 
   //acciones modal eliminar
   const handleCloseEliminar : React.MouseEventHandler<HTMLButtonElement> | any = () => setIsActiveModalEliminar(false);
   const handleShowEliminar = () => setIsActiveModalEliminar(true);
+
+  //acciones modal eliminar
+  const handleCloseMostrar : React.MouseEventHandler<HTMLButtonElement> | any = () => setIsActiveModalMostrar(false);
+  const handleShowMostrar = () => setIsActiveModalMostrar(true);
 
   //para capturar el valor de los textField
   const handleChange = ({target} : React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +94,7 @@ function App() {
         console.log(error);
       })
   }
-  //petición put
+  //petición get por ciudad
   const getDescripcionCiudad = async () =>{
     await apiWeatherLocal.get<WeatherInterfaz>('/descripcion/' + descripcionSeleccionada.ciudad)
       .then(response => {
@@ -89,8 +103,31 @@ function App() {
       }).catch(error => {
         console.log(error);
       });
-
     }
+  
+  //petición put
+  const putDescripcion = async () =>{
+    descripcionSeleccionada.temperatura = parseInt(descripcionSeleccionada.temperatura.toString());
+    await apiWeatherLocal.put<WeatherInterfaz>('/descripcion/' + descripcionSeleccionada.ciudad, descripcionSeleccionada)
+      .then(response => {
+        var new_data = descripcion;
+        new_data.map(description => {
+          if(descripcionSeleccionada.id === description.id){
+            description.id = descripcionSeleccionada.id;
+            description.ciudad = descripcionSeleccionada.ciudad;
+            description.clima = descripcionSeleccionada.clima;
+            description.descripcion = descripcionSeleccionada.descripcion;
+            description.temperatura = descripcionSeleccionada.temperatura;
+            description.pais = descripcionSeleccionada.pais;
+          }
+          console.log(response.status);
+        })
+        setDescripcion(new_data);
+        handleCloseEditar();
+      }).catch(error => {
+        console.log(error);
+      });
+  }
   //petición delete
   const deleteDescription = async () =>{
     await apiWeatherLocal.delete<WeatherInterfaz>('/descripcion/' + descripcionSeleccionada.ciudad)
@@ -102,7 +139,14 @@ function App() {
         console.log(error);
       });
   }
-  
+/*
+  //Identificar el registro, para capturar los datos en los textField de Editar
+  const setEditarEliminarDescripcion = (caso : string, gestor : WeatherInterfaz) => {
+    setDescripcionSeleccionada(gestor);
+    (caso === "Editar") ? 
+      handleShowEditar() : handleShowEliminar();
+  }
+*/
 
   return (
     <div>
@@ -144,7 +188,7 @@ function App() {
                     <TableCell>
                       <Box sx={{'& > :not(style)': {m: 2,},}}>
                         <Edit sx={{ color: lime[700] }} className={iconos}
-                          />
+                          onClick={()=>handleShowEditar()}/>
 
                         <Delete sx={{ color: red[900] }} className={iconos}
                           onClick={()=>handleShowEliminar()}/>
@@ -156,9 +200,13 @@ function App() {
             </TableBody>
             <TableFooter>
             {/*Boton para insertar datos*/}
-                <Button variant='outlined' sx={{mt:2, mb:2}}
+                <Button variant='outlined' sx={{mt:2, mb:1, mx:0.5}}
                   onClick={()=>handleShowInsertar()}>
                   Insertar
+                </Button>
+                <Button variant='outlined' sx={{mt:2, mb:1, mx:0.5}}
+                  onClick={()=>handleShowMostrar()}>
+                  Mostrar
                 </Button>
             </TableFooter>
           </Table>
@@ -204,6 +252,52 @@ function App() {
               </Paper>
           </Dialog>
         </div>
+        {/*"Dialog para editar registros"*/}
+        <div>
+          <Dialog open={isActiveModalEditar}>
+              <DialogTitle>
+                <Typography>
+                  Editar descripción del clima para este registro
+                </Typography>
+              </DialogTitle>
+              <Paper sx={{padding:"1.1em",}}>
+                <DialogContent sx={{mt:0.1}}>
+                  <Container maxWidth = 'md'>
+                    <Grid container direction='column'>
+                      <Grid item>
+                        <Box>
+                          <TextField fullWidth label="Ciudad" sx={{mt:1, mb:1.1}} 
+                            margin="normal" type="text" name="ciudad"
+                            onChange={handleChange} required
+                            value={descripcionSeleccionada && descripcionSeleccionada.ciudad}/>
+                            <TextField fullWidth label="Clima" sx={{mt:1, mb:1.1}} 
+                            margin="normal" type="text" name="clima"
+                            onChange={handleChange} required
+                            value={descripcionSeleccionada && descripcionSeleccionada.clima}/>
+                            <TextField fullWidth label="Descripción" sx={{mt:1, mb:1.1}} 
+                            margin="normal" type="text" name="descripcion"
+                            onChange={handleChange} required
+                            value={descripcionSeleccionada && descripcionSeleccionada.descripcion}/>
+                            <TextField fullWidth label="Temperatura" sx={{mt:1, mb:1.1}} 
+                            margin="normal" type="text" name="temperatura"
+                            onChange={handleChange} required
+                            value={descripcionSeleccionada && descripcionSeleccionada.temperatura}/>
+                            <TextField fullWidth label="País" sx={{mt:1, mb:1.1}} 
+                            margin="normal" type="text" name="pais"
+                            onChange={handleChange} required
+                            value={descripcionSeleccionada && descripcionSeleccionada.pais}/>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Container>
+                </DialogContent>
+                <DialogActions>
+                  <Button variant="outlined" onClick={handleCloseEditar}>Cancel</Button>
+                  <Button variant="outlined" onClick={()=>putDescripcion()}>Editar</Button>
+                </DialogActions>
+              </Paper>
+          </Dialog>
+        </div>
         {/*"Dialog para confirmar eliminación de registro"*/}
         <div>
           <Dialog open={isActiveModalEliminar}>
@@ -216,6 +310,39 @@ function App() {
                 <DialogActions sx={{display:'flex', justifyContent:'center'}}>
                   <Button variant="outlined" onClick={()=>deleteDescription()}>Si</Button>
                   <Button variant="outlined" onClick={()=>handleCloseEliminar()}>No</Button>
+                </DialogActions>
+              </Paper>
+          </Dialog>
+        </div>
+
+        {/*"Dialog para confirmar eliminación de registro"*/}
+        <div>
+          <Dialog open={isActiveModalMostrar}>
+              <DialogTitle>
+                <Typography>
+                  Ciudades visitadas
+                </Typography>
+              </DialogTitle>
+              <Paper sx={{padding:"1.2em",}}>
+                <Container maxWidth='lg'>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Ciudad</TableCell>
+                          <TableCell>Descripción</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                      {
+
+                      }
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Container>
+                <DialogActions sx={{display:'flex', justifyContent:'center', mt:2, mb:2}}>
+                  <Button variant="outlined" onClick={()=>handleCloseMostrar()}>Cerrar</Button>
                 </DialogActions>
               </Paper>
           </Dialog>
