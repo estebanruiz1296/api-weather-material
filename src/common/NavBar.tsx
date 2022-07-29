@@ -10,7 +10,7 @@ export const NavBar : React.FC<{}>  = () => {
                         <Grid container direction='row' justifyContent="center" alignItems="center">
                         <Grid item>
                             <Typography>
-                                <h3 style={{color:'#c8fa5f'}}>Gestores de Bases de Datos Material UI</h3>
+                                <h3 style={{color:'#c8fa5f'}}>Api del clima + React.js + TypeScript + Material UI</h3>
                             </Typography>
                         </Grid>
                     </Grid> 

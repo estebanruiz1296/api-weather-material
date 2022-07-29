@@ -1,10 +1,10 @@
 
 export interface WeatherInterfaz {
-    id : number | undefined | null,
+    id : number | undefined,
     ciudad : string,
     clima : string,
     descripcion : string, 
-    temperatura : number | null | any,
+    temperatura : number,
     pais : string
 }
 
