@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import { apiWeatherLocal} from './api/ApiWeather';
+import React, {useEffect, useState} from 'react';
+import { apiWeatherLocal, apiWeatherLocalConsulta} from './api/ApiWeather';
 import { NavBar } from './common/NavBar';
 import {TableContainer, Table, TableHead, TableRow, 
   Paper, TableCell, TableBody, TableFooter,
@@ -7,7 +7,7 @@ import {TableContainer, Table, TableHead, TableRow,
   DialogTitle, Typography, DialogContent, Grid,
   DialogActions,
   Stack} from '@mui/material'
-import { WeatherInterfaz } from './interfaces/WeatherInterface';
+import { ConsultaInterfaz, WeatherInterfaz } from './interfaces/WeatherInterface';
 import {Edit, Delete} from '@mui/icons-material';
 import {red, lime } from '@mui/material/colors';
 import { useStyles } from './stylesCustom/AllStyles';
@@ -15,6 +15,9 @@ import { useStyles } from './stylesCustom/AllStyles';
 function App() {
   //hook para obtener información del api, array de datos
   const [descripcion, setDescripcion] = useState<WeatherInterfaz[]>([]);
+
+  //hook para obtener información del api, array de datos
+  const [consulta, setConsulta] = useState<ConsultaInterfaz[]>([]);
 
   //hook obtener objeto
   const [descripcionSeleccionada, setDescripcionSeleccionada] = useState<WeatherInterfaz>({
@@ -24,6 +27,12 @@ function App() {
     descripcion : '',
     temperatura : 0,
     pais : ''
+  });
+  //hook obtener objeto consulta
+  const [consultaSeleccionada, setConsultaSeleccionada] = useState<ConsultaInterfaz>({
+    id : 0,
+    ciudad : '',
+    descripcion : '',
   });
 
   //themes
@@ -64,25 +73,56 @@ function App() {
       ...prevState,
       [name] :value
     }));
-    console.log(descripcionSeleccionada);
   }
 
   //peticiones http
     //petición get
-
-  
-  /*const getDescripcion = async () =>{
+  const getDescripcion = async () =>{
     await apiWeatherLocal.get<WeatherInterfaz[]>('/descripcion')
       .then(response => {
+        const ciudades = response.data.map(dato => dato.ciudad)
+        for (let index = 0; index < ciudades.length; index++) {
+          if(descripcionSeleccionada.ciudad !== ciudades[index]){
+            console.log("es diferente");
+          }else{
+            console.log("es igual");
+            
+          }
+        }
+        }).catch(error => {
+        console.log(error);
+      });
+  }
+  //petición get Consultas
+  const getConsultas = async () =>{
+    await apiWeatherLocalConsulta.get('/consulta')
+      .then(response => {
         console.log(response.status);
-        setDescripcion(response.data);
+        setConsulta(response.data);
       }).catch(error => {
         console.log(error);
       });
-  }*/
+  }
+  //post Consulta
+  const postConsulta = async () =>{
+    delete consultaSeleccionada.id;
+    await apiWeatherLocalConsulta.post<ConsultaInterfaz>('/consulta' + consultaSeleccionada)
+      .then(response => {
+        setConsulta(consulta.concat(response.data));
+        console.log(response.status);
+      }).catch(error => {
+        console.log(error);
+      });
+  }
+
+  //Buscar ciudades ya agregadas y las consultadas
+  const buscarCiudades = () => {
+    console.log(descripcion)
+    console.log(consulta)
+  }
 
   //petición post
-  const postGestor = async () => {
+  const postDescripcion = async () => {
     delete descripcionSeleccionada.id;
     descripcionSeleccionada.temperatura = parseInt(descripcionSeleccionada.temperatura.toString())
     await apiWeatherLocal.post<WeatherInterfaz>('/descripcion', descripcionSeleccionada)
@@ -100,6 +140,7 @@ function App() {
       .then(response => {
         setDescripcionSeleccionada(response.data);
         console.log(response.status);
+        getDescripcion();
       }).catch(error => {
         console.log(error);
       });
@@ -139,15 +180,13 @@ function App() {
         console.log(error);
       });
   }
-/*
-  //Identificar el registro, para capturar los datos en los textField de Editar
-  const setEditarEliminarDescripcion = (caso : string, gestor : WeatherInterfaz) => {
-    setDescripcionSeleccionada(gestor);
-    (caso === "Editar") ? 
-      handleShowEditar() : handleShowEliminar();
-  }
-*/
 
+  useEffect(() => {
+    getConsultas();
+    getDescripcion();
+  }, [])
+  
+  
   return (
     <div>
       <NavBar/>
@@ -247,7 +286,7 @@ function App() {
                 </DialogContent>
                 <DialogActions>
                   <Button variant="outlined" onClick={handleCloseInsertar}>Cancel</Button>
-                  <Button variant="outlined" onClick={()=>postGestor()}>Agregar</Button>
+                  <Button variant="outlined" onClick={()=>postDescripcion()}>Agregar</Button>
                 </DialogActions>
               </Paper>
           </Dialog>
@@ -335,7 +374,12 @@ function App() {
                       </TableHead>
                       <TableBody>
                       {
-
+                        consulta.map(({id, ciudad, descripcion})=>(
+                          <TableRow key={id}>
+                            <TableCell>{ciudad}</TableCell>
+                            <TableCell>{descripcion}</TableCell>
+                          </TableRow>
+                        ))
                       }
                       </TableBody>
                     </Table>
