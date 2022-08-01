@@ -11,6 +11,7 @@ import { ConsultaInterfaz, WeatherInterfaz } from './interfaces/WeatherInterface
 import {Edit, Delete} from '@mui/icons-material';
 import {red, lime } from '@mui/material/colors';
 import { useStyles } from './stylesCustom/AllStyles';
+import '../src/assets/css/App.css'
 
 function App() {
   //hook para obtener información del api, array de datos
@@ -28,13 +29,6 @@ function App() {
     temperatura : 0,
     pais : ''
   });
-  //hook obtener objeto consulta
-  const [consultaSeleccionada, setConsultaSeleccionada] = useState<ConsultaInterfaz>({
-    id : 0,
-    ciudad : '',
-    descripcion : '',
-  });
-
   //themes
   const {iconos} = useStyles();
   
@@ -77,25 +71,10 @@ function App() {
 
   //peticiones http
     //petición get
-  const getDescripcion = async () =>{
-    await apiWeatherLocal.get<WeatherInterfaz[]>('/descripcion')
-      .then(response => {
-        const ciudades = response.data.map(dato => dato.ciudad)
-        for (let index = 0; index < ciudades.length; index++) {
-          if(descripcionSeleccionada.ciudad !== ciudades[index]){
-            console.log("es diferente");
-          }else{
-            console.log("es igual");
-            
-          }
-        }
-        }).catch(error => {
-        console.log(error);
-      });
-  }
+  
   //petición get Consultas
   const getConsultas = async () =>{
-    await apiWeatherLocalConsulta.get('/consulta')
+    await apiWeatherLocalConsulta.get<WeatherInterfaz[]>('/consulta')
       .then(response => {
         console.log(response.status);
         setConsulta(response.data);
@@ -105,26 +84,39 @@ function App() {
   }
   //post Consulta
   const postConsulta = async () =>{
-    delete consultaSeleccionada.id;
-    await apiWeatherLocalConsulta.post<ConsultaInterfaz>('/consulta' + consultaSeleccionada)
+    delete descripcionSeleccionada.id;
+    delete descripcionSeleccionada.clima;
+    delete descripcionSeleccionada.temperatura;
+    delete descripcionSeleccionada.pais;
+    await apiWeatherLocalConsulta.post<WeatherInterfaz>('/consulta' + descripcionSeleccionada)
       .then(response => {
-        setConsulta(consulta.concat(response.data));
         console.log(response.status);
+        setConsulta(consulta.concat(response.data));
       }).catch(error => {
         console.log(error);
       });
   }
 
   //Buscar ciudades ya agregadas y las consultadas
-  const buscarCiudades = () => {
-    console.log(descripcion)
-    console.log(consulta)
+  const buscarCiudades = async () => {
+    await apiWeatherLocalConsulta.get<WeatherInterfaz>('/consulta/' + descripcionSeleccionada.ciudad)
+      .then(response => {
+        const ciudadBuscada = response.data.ciudad;
+        if(ciudadBuscada === descripcionSeleccionada.ciudad){
+          console.log("existe");
+        }else{
+          console.log("No existe");
+          postConsulta();
+        }
+      }).catch(error => {
+        console.log(error);
+      });
   }
 
   //petición post
   const postDescripcion = async () => {
     delete descripcionSeleccionada.id;
-    descripcionSeleccionada.temperatura = parseInt(descripcionSeleccionada.temperatura.toString())
+    descripcionSeleccionada.temperatura = parseInt((String) (descripcionSeleccionada.temperatura))
     await apiWeatherLocal.post<WeatherInterfaz>('/descripcion', descripcionSeleccionada)
       .then(response => {
         setDescripcion(descripcion.concat(response.data));
@@ -140,7 +132,8 @@ function App() {
       .then(response => {
         setDescripcionSeleccionada(response.data);
         console.log(response.status);
-        getDescripcion();
+        //buscar ciudad endpoint
+        buscarCiudades();
       }).catch(error => {
         console.log(error);
       });
@@ -148,7 +141,7 @@ function App() {
   
   //petición put
   const putDescripcion = async () =>{
-    descripcionSeleccionada.temperatura = parseInt(descripcionSeleccionada.temperatura.toString());
+    descripcionSeleccionada.temperatura = parseInt((String)(descripcionSeleccionada.temperatura));
     await apiWeatherLocal.put<WeatherInterfaz>('/descripcion/' + descripcionSeleccionada.ciudad, descripcionSeleccionada)
       .then(response => {
         var new_data = descripcion;
@@ -183,7 +176,6 @@ function App() {
 
   useEffect(() => {
     getConsultas();
-    getDescripcion();
   }, [])
   
   
@@ -250,12 +242,12 @@ function App() {
             </TableFooter>
           </Table>
         </TableContainer>
-        <div>
+        
           {/*"Dialog para insertar registros"*/}
           <Dialog open={isActiveModalInsertar}>
               <DialogTitle>
                 <Typography>
-                  Insertar nueva descripción del clima
+                  <p>Insertar nueva descripción del clima</p>
                 </Typography>
               </DialogTitle>
               <Paper sx={{padding:"1.1em",}}>
@@ -290,13 +282,13 @@ function App() {
                 </DialogActions>
               </Paper>
           </Dialog>
-        </div>
+        
         {/*"Dialog para editar registros"*/}
-        <div>
+       
           <Dialog open={isActiveModalEditar}>
               <DialogTitle>
                 <Typography>
-                  Editar descripción del clima para este registro
+                  <p>Editar descripción del clima para este registro</p>
                 </Typography>
               </DialogTitle>
               <Paper sx={{padding:"1.1em",}}>
@@ -336,13 +328,13 @@ function App() {
                 </DialogActions>
               </Paper>
           </Dialog>
-        </div>
+      
         {/*"Dialog para confirmar eliminación de registro"*/}
-        <div>
+        
           <Dialog open={isActiveModalEliminar}>
               <DialogTitle>
                 <Typography>
-                  ¿Estas seguro de eliminar el registro de la ciudad de: {descripcionSeleccionada && descripcionSeleccionada.ciudad} ?
+                  <p>¿Estas seguro de eliminar el registro de la ciudad de: {descripcionSeleccionada && descripcionSeleccionada.ciudad} ?</p>
                 </Typography>
               </DialogTitle>
               <Paper sx={{padding:"1.2em",}}>
@@ -352,14 +344,14 @@ function App() {
                 </DialogActions>
               </Paper>
           </Dialog>
-        </div>
+        
 
         {/*"Dialog para confirmar eliminación de registro"*/}
-        <div>
+        
           <Dialog open={isActiveModalMostrar}>
               <DialogTitle>
                 <Typography>
-                  Ciudades visitadas
+                  <p>Ciudades visitadas</p>
                 </Typography>
               </DialogTitle>
               <Paper sx={{padding:"1.2em",}}>
@@ -390,8 +382,6 @@ function App() {
                 </DialogActions>
               </Paper>
           </Dialog>
-        </div>
-        
       </Container>
     </div>
   );
